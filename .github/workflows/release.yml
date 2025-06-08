@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Test
+      run: cargo test --verbose
+        
+
+      #:TODO: Handle publishing
+      #- name Publish
+      #- if: success()
+      # run: DO THE THING
