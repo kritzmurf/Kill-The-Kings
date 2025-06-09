@@ -5,6 +5,7 @@ pub fn hello_world() -> String {
 
 fn main() {
     println!("Hello, world!");
+    println!("This is Kill The Kings..... someday");
 }
 
 #[cfg(test)]
