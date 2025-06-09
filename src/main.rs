@@ -1,4 +1,4 @@
-pub fn hello_world() -> String {
+pub fn hello_world() -> &'static str {
     "Hello, Kill The Kings!"
 }
 
