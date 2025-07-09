@@ -1,3 +1,5 @@
+mod tui;
+
 pub fn hello_world() -> &'static str {
     "Hello, Kill The Kings!"
 }

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+-   Added initial card assets
 -   Added stub Readme and design doc
 -   Added MIT License
 -   Added initial program flowchart design
