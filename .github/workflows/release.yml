@@ -6,17 +6,166 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings" 
 
 jobs:
+  note_linting:
+    name: Note Linting (ripgrep TODO)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Check for TODO comments
+        run: |
+          # Insert any other comment fields we may want here
+          if rg '//\s*(TODO|FIXME|HACK)' src/; then
+            echo "❌ Developer Notes Found. Clean up and reattempt. Aborting release."
+            exit 1
+          fi
+          echo "✅ Note Linting success"
+
   build:
-    runs-on: macos-latest
+    name: ${{ matrix.target }} Build
+    runs-on: ${{ matrix.target }}
+    strategy:
+      matrix:
+        include:
+          - target: ubuntu-latest
+            ext: ""
+            arch: ""
+          - target: macos-latest
+            ext: ""
+            arch: aarch64-apple-darwin
+          - target: macos-latest
+            ext: ""
+            arch: x86_64-apple-darwin
+          - target: windows-latest
+            ext: ".exe" 
+            arch: ""
+
     steps:
     - uses: actions/checkout@v4
+
+    - name: Add Arch Target (for mac back compat)
+      shell: bash
+      run: |
+        if [ ${{ matrix.arch }} != "" ]; then
+          rustup target add ${{ matrix.arch }}
+        fi
+
+    - name: Install Clippy
+      run: rustup component add clippy
+
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
     - name: Test
       run: cargo test --verbose
-        
 
-      #:TODO: Handle publishing
-      #- name Publish
-      #- if: success()
-      # run: DO THE THING
+    - name: Build
+      shell: bash
+      run: |
+        if [ ${{ matrix.arch }} != "" ]; then
+          cargo build --release --target ${{ matrix.arch }}
+        else
+         cargo build --release
+        fi
+
+    - name: Make Artifacts Directory
+      run: mkdir -p artifacts
+
+    - name: Copy To Artifacts Directory
+      shell: bash
+      run: |
+        artifact="kill-the-kings"
+        if [ "${{ matrix.arch }}" != "" ]; then
+          src="target/${{ matrix.arch }}/release/${artifact}${{ matrix.ext }}"
+          destination="artifacts/${artifact}-${{ matrix.target }}-${{ matrix.arch }}${{ matrix.ext }}"
+        else
+          src="target/release/${artifact}${{ matrix.ext }}"
+          destination="artifacts/${artifact}-${{ matrix.target }}${{ matrix.ext }}"
+        fi
+        cp "$src" "$destination"
+
+    - name: Upload Artifact (OSX arch appended)
+      uses: actions/upload-artifact@v4
+      if: matrix.arch != ''
+      with:
+        name: kill-the-kings-${{ matrix.target }}-${{ matrix.arch }}
+        path: artifacts/
+
+    - name: Upload Artifact (Linux and Windows native)
+      uses: actions/upload-artifact@v4
+      if: matrix.arch == ''
+      with:
+        name: kill-the-kings-${{ matrix.target }}
+        path: artifacts/
+
+  release:
+    needs: [ note_linting, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Checking project history
+
+      - name: Read version file
+        id: get_tag
+        run: echo "tag=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "refs/tags/v${{ steps.get_tag.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag v${{ steps.get_tag.outputs.tag }} already exists. Iterate tag version and reattempt"
+            exit 1
+          fi
+
+      - name: Create tag and push
+        env:
+          TAG: ${{ steps.get_tag.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${TAG}"
+          git push origin "v${TAG}"
+
+      # Download each artifact by name
+      - name: Download Ubuntu artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-ubuntu-latest
+          path: artifacts/
+
+      - name: Download macOS artifact (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-macos-latest-arm64
+          path: artifacts/
+
+      - name: Download macOS artifact (x86_64)
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-macos-latest-x86_64
+          path: artifacts/
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-windows-latest
+          path: artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_tag.outputs.tag }}
+          files: |
+            artifacts/kill-the-kings-ubuntu-latest/kill-the-kings
+            artifacts/kill-the-kings-macos-latest-arm64/kill-the-kings
+            artifacts/kill-the-kings-macos-latest-x86_64/kill-the-kings
+            artifacts/kill-the-kings-windows-latest/kill-the-kings.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
