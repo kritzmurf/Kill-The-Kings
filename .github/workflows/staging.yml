@@ -6,11 +6,107 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings" 
 
 jobs:
+  note_linting:
+    name: Note Linting (ripgrep TODO)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Check for TODO comments
+        run: |
+          # Insert any other comment fields we may want here
+          if rg '//\s*(TODO|FIXME|HACK)' src/; then
+            echo "❌ Developer Notes Found. Clean up and reattempt. Aborting release."
+            exit 1
+          fi
+          echo "✅ Note Linting success"
+
   build:
-    runs-on: macos-latest
+    needs: note_linting
+    name: ${{ matrix.target }} Build
+    runs-on: ${{ matrix.target }}
+    strategy:
+      matrix:
+        include:
+          - target: ubuntu-latest
+            ext: ""
+            arch: ""
+          - target: macos-latest
+            ext: ""
+            arch: aarch64-apple-darwin
+          - target: macos-latest
+            ext: ""
+            arch: x86_64-apple-darwin
+          - target: windows-latest
+            ext: ".exe" 
+            arch: ""
+
     steps:
     - uses: actions/checkout@v4
+
+    - name: Add Arch Target (for mac back compat)
+      shell: bash
+      run: |
+        if [ ${{ matrix.arch }} != "" ]; then
+          rustup target add ${{ matrix.arch }}
+        fi
+
+    - name: Install Clippy
+      run: rustup component add clippy
+
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
     - name: Test
-      run: cargo test --verbose --release
+      run: cargo test --verbose
+
+    - name: Build
+      shell: bash
+      run: |
+        if [ ${{ matrix.arch }} != "" ]; then
+          cargo build --release --target ${{ matrix.arch }}
+        else
+         cargo build --release
+        fi
+
+    - name: Make Artifacts Directory
+      run: mkdir -p artifacts
+
+    - name: Copy To Artifacts Directory
+      shell: bash
+      run: |
+        artifact="kill-the-kings"
+        if [ "${{ matrix.arch }}" != "" ]; then
+          src="target/${{ matrix.arch }}/release/${artifact}${{ matrix.ext }}"
+          destination="artifacts/${artifact}-${{ matrix.target }}-${{ matrix.arch }}${{ matrix.ext }}"
+        else
+          src="target/release/${artifact}${{ matrix.ext }}"
+          destination="artifacts/${artifact}-${{ matrix.target }}${{ matrix.ext }}"
+        fi
+        cp "$src" "$destination"
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: kill-the-kings-${{ matrix.target }}
+        path: artifacts/
+
+    - name: Upload Artifact (OSX arch appended)
+      uses: actions/upload-artifact@v4
+      if: matrix.arch != ''
+      with:
+        name: kill-the-kings-${{ matrix.target }}-${{ matrix.arch }}
+        path: artifacts/
+
+    - name: Upload Artifact (Linux and Windows native)
+      uses: actions/upload-artifact@v4
+      if: matrix.arch == ''
+      with:
+        name: kill-the-kings-${{ matrix.target }}
+        path: artifacts/
