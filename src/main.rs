@@ -1,4 +1,4 @@
-#[allow(unused)] //TODO: DO NOT RELEASE WITH THIS TO MAIN
+#[allow(unused)]
 mod ui;
 
 use crate::ui::app::{App};
@@ -14,8 +14,7 @@ fn main() ->Result<(), io::Error> {
     println!("Hello, world!");
     println!("This is Kill The Kings..... someday");
 
-    let _app = App::default(); //TODO: Remove the underscore as we will be using this
-
+    let _app = App::default(); 
     Ok(())
 }
 
