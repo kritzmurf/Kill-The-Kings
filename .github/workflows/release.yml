@@ -118,7 +118,7 @@ jobs:
       - name: Read version file
         id: get_tag
         run: |
-          echo "tag=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          echo "tag=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         id: check_tag
@@ -128,6 +128,45 @@ jobs:
             exit 1
           fi
 
+      # Download each artifact by name
+      - name: Download Ubuntu artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-ubuntu-latest
+          path: artifacts/
+
+      - name: Download macOS artifact (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-macos-latest-aarch64-apple-darwin
+          path: artifacts/
+
+      - name: Download macOS artifact (x86_64)
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-macos-latest-x86_64-apple-darwin
+          path: artifacts/
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kill-the-kings-windows-latest
+          path: artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_tag.outputs.tag }}
+
+          files: |
+            artifacts/kill-the-kings-ubuntu-latest
+            artifacts/kill-the-kings-macos-latest-aarch64-apple-darwin
+            artifacts/kill-the-kings-macos-latest-x86_64-apple-darwin
+            artifacts/kill-the-kings-windows-latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tag ONLY once we know upload went smoothly
       - name: Create tag and push
         env:
           RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
@@ -143,41 +182,3 @@ jobs:
           git remote -v 
           git tag "v${TAG}"
           git push origin "v${TAG}"
-
-      # Download each artifact by name
-      - name: Download Ubuntu artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: kill-the-kings-ubuntu-latest
-          path: artifacts/
-
-      - name: Download macOS artifact (arm64)
-        uses: actions/download-artifact@v4
-        with:
-          name: kill-the-kings-macos-latest-arm64
-          path: artifacts/
-
-      - name: Download macOS artifact (x86_64)
-        uses: actions/download-artifact@v4
-        with:
-          name: kill-the-kings-macos-latest-x86_64
-          path: artifacts/
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: kill-the-kings-windows-latest
-          path: artifacts/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.get_tag.outputs.tag }}
-
-          files: |
-            artifacts/kill-the-kings-ubuntu-latest/kill-the-kings
-            artifacts/kill-the-kings-macos-latest-arm64/kill-the-kings
-            artifacts/kill-the-kings-macos-latest-x86_64/kill-the-kings
-            artifacts/kill-the-kings-windows-latest/kill-the-kings.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
