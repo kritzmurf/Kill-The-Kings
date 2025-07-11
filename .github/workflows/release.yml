@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install -y ripgrep
@@ -110,11 +112,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Checking project history
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Read version file
         id: get_tag
-        run: echo "tag=$(cat VERSION)" >> $GITHUB_OUTPUT
+        run: |
+          echo "tag=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Check if tag exists
         id: check_tag
@@ -126,10 +130,17 @@ jobs:
 
       - name: Create tag and push
         env:
-          TAG: ${{ steps.get_tag.outputs.tag }}
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
         run: |
+          TAG="${{ steps.get_tag.outputs.tag }}"
+          if [ -z "$TAG" ]; then
+            echo "No tag present. failing and exiting"
+            exit 1
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git remote -v 
           git tag "v${TAG}"
           git push origin "v${TAG}"
 
@@ -162,6 +173,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.get_tag.outputs.tag }}
+
           files: |
             artifacts/kill-the-kings-ubuntu-latest/kill-the-kings
             artifacts/kill-the-kings-macos-latest-arm64/kill-the-kings
