@@ -91,12 +91,6 @@ jobs:
         fi
         cp "$src" "$destination"
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: kill-the-kings-${{ matrix.target }}
-        path: artifacts/
-
     - name: Upload Artifact (OSX arch appended)
       uses: actions/upload-artifact@v4
       if: matrix.arch != ''
