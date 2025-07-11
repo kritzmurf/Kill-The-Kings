@@ -1,11 +1,21 @@
+#[allow(unused)]
+mod ui;
+
+use crate::ui::app::{App};
+
+use std::{io};
+
 pub fn hello_world() -> &'static str {
     "Hello, Kill The Kings!"
 }
 
 
-fn main() {
+fn main() ->Result<(), io::Error> {
     println!("Hello, world!");
     println!("This is Kill The Kings..... someday");
+
+    let _app = App::default(); 
+    Ok(())
 }
 
 #[cfg(test)]
