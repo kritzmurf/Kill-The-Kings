@@ -128,22 +128,6 @@ jobs:
             exit 1
           fi
 
-      - name: Create tag and push
-        env:
-          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
-        run: |
-          TAG="${{ steps.get_tag.outputs.tag }}"
-          if [ -z "$TAG" ]; then
-            echo "No tag present. failing and exiting"
-            exit 1
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git remote -v 
-          git tag "v${TAG}"
-          git push origin "v${TAG}"
-
       # Download each artifact by name
       - name: Download Ubuntu artifact
         uses: actions/download-artifact@v4
@@ -181,3 +165,20 @@ jobs:
             artifacts/kill-the-kings-windows-latest/kill-the-kings.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tag ONLY once we know upload went smoothly
+      - name: Create tag and push
+        env:
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+        run: |
+          TAG="${{ steps.get_tag.outputs.tag }}"
+          if [ -z "$TAG" ]; then
+            echo "No tag present. failing and exiting"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git remote -v 
+          git tag "v${TAG}"
+          git push origin "v${TAG}"
