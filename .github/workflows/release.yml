@@ -176,8 +176,8 @@ jobs:
 
           files: |
             artifacts/kill-the-kings-ubuntu-latest/kill-the-kings
-            artifacts/kill-the-kings-macos-latest-arm64/kill-the-kings
-            artifacts/kill-the-kings-macos-latest-x86_64/kill-the-kings
+            artifacts/kill-the-kings-macos-latest-aarch64-apple-darwin/kill-the-kings
+            artifacts/kill-the-kings-macos-latest-x86_64-apple-darwin/kill-the-kings
             artifacts/kill-the-kings-windows-latest/kill-the-kings.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
