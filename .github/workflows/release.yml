@@ -118,7 +118,7 @@ jobs:
       - name: Read version file
         id: get_tag
         run: |
-          echo "tag=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          echo "tag=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         id: check_tag
