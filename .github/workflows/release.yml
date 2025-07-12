@@ -117,7 +117,8 @@ jobs:
 
       - name: Read version file
         id: get_tag
-        run: echo "tag=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "tag=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Check if tag exists
         id: check_tag
@@ -172,6 +173,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.get_tag.outputs.tag }}
+
           files: |
             artifacts/kill-the-kings-ubuntu-latest/kill-the-kings
             artifacts/kill-the-kings-macos-latest-arm64/kill-the-kings
