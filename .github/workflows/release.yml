@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install ripgrep
         run: sudo apt-get update && sudo apt-get install -y ripgrep
@@ -110,11 +112,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Checking project history
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Read version file
         id: get_tag
-        run: echo "tag=$(cat VERSION)" >> $GITHUB_OUTPUT
+        run: echo "tag=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Check if tag exists
         id: check_tag
@@ -129,9 +132,14 @@ jobs:
           RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
           TAG: ${{ steps.get_tag.outputs.tag }}
         run: |
+          if [ -z "$TAG" ]; then
+            echo "No tag present. failing and exiting"
+            exit 1
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${RELEASE_PAT}@github.com/kritzmurf/Kill-The-Kings.git
+
+          git remote -v 
           git tag "v${TAG}"
           git push origin "v${TAG}"
 
