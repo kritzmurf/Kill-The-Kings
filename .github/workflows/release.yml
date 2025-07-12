@@ -131,8 +131,8 @@ jobs:
       - name: Create tag and push
         env:
           RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
-          TAG: ${{ steps.get_tag.outputs.tag }}
         run: |
+          TAG="${{ steps.get_tag.outputs.tag }}"
           if [ -z "$TAG" ]; then
             echo "No tag present. failing and exiting"
             exit 1
