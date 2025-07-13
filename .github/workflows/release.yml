@@ -159,10 +159,10 @@ jobs:
           tag_name: v${{ steps.get_tag.outputs.tag }}
 
           files: |
-            artifacts/kill-the-kings-ubuntu-latest/kill-the-kings
-            artifacts/kill-the-kings-macos-latest-aarch64-apple-darwin/kill-the-kings
-            artifacts/kill-the-kings-macos-latest-x86_64-apple-darwin/kill-the-kings
-            artifacts/kill-the-kings-windows-latest/kill-the-kings.exe
+            artifacts/kill-the-kings-ubuntu-latest
+            artifacts/kill-the-kings-macos-latest-aarch64-apple-darwin
+            artifacts/kill-the-kings-macos-latest-x86_64-apple-darwin
+            artifacts/kill-the-kings-windows-latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
