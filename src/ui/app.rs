@@ -1,11 +1,29 @@
 use crate::ui;
+use include_dir::{include_dir, Dir};
 
-#[derive(Default)]
+use ratatui::{
+    Frame,
+    DefaultTerminal,
+};
+use std::{io};
+
+//adding art assets to binary
+static RESOURCES: Dir<'_> = include_dir!("resources");
+
+#[derive(Debug, Copy, Clone, Default)]
+pub struct Point {
+    x: u16,
+    y: u16,
+}
+
+#[derive(Debug, Default)]
 pub struct App {
     //screen we are displaying
     current_screen: CurrentScreen,
     should_quit: bool,
 
+    //mouse
+    mouse_position: Point,
 }
 
 impl App {
@@ -16,9 +34,29 @@ impl App {
             should_quit: false,
         }
     }
+
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        while !self.exit {
+            terminal.draw(|f| self.draw(f))?;
+            self.handle_events();
+        }
+        Ok(())
+    }
+    fn draw(&self, frame &mut Frame) {}
+    fn handle_events() -> io::Result<()>{
+        Ok(())
+    }
 }
 
-#[derive(Default)]
+fn get_image(path: &str) ->Vec<u8> {
+    if let Some(img) == RESOURCES.get_file(path).map(|file| file.contents()) {
+        img.to_vec()
+    } else {
+        vec[] //should we make this a result err state?
+    }
+}
+
+#[derive(Debug, Default)]
 pub enum CurrentScreen {
     #[default]
     Main, //Main splash Screen
