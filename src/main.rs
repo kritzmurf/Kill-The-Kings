@@ -21,7 +21,7 @@ use ratatui::{DefaultTerminal, Frame, Terminal};
 use std::io::{stdout, Error, ErrorKind, Stdout};
 use std::{env, io, process};
 
-
+// This is simply a test output to confirm cfg(test) is set up correctly
 pub fn hello_world() -> &'static str {
     "Hello, Kill The Kings!"
 }
@@ -42,8 +42,11 @@ fn main() ->Result<(), io::Error> {
 }
 
 fn run(terminal: &mut Terminal, app: &mut App) -> io::Result<bool> {
-    terminal.draw(|f| render(f, app));
-    
+    loop {
+        terminal.draw(|f| render(f, app));
+        //handle input. We will either have an input handler class, or an
+        //impl in APP that interacts with the state based on input.
+    }
 }
 
 

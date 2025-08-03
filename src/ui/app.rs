@@ -35,7 +35,6 @@ impl App {
             mouse_position: Point {x: 0, y: 0},
         }
     }
-    fn draw(&self, frame &mut Frame) {}
     fn handle_events() -> io::Result<()>{
         Ok(())
     }
